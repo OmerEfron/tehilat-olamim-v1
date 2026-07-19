@@ -154,6 +154,16 @@ export function t(locale: Locale) {
       : "Wrong guess. Start again from card one.",
     yourName: he ? "השם שלך" : "Your name",
     namePlaceholder: he ? "איך קוראים לך?" : "What should we call you?",
+    selfieLabel: he ? "סלפי (אופציונלי)" : "Selfie (optional)",
+    selfieTake: he ? "צלם / העלה סלפי" : "Take / upload selfie",
+    selfieReplace: he ? "החלף סלפי" : "Replace selfie",
+    selfieRemove: he ? "הסר" : "Remove",
+    selfieNone: he ? "ללא סלפי" : "No selfie yet",
+    selfiePreview: he ? "תצוגת סלפי" : "Selfie preview",
+    selfieBusy: he ? "מכווץ תמונה…" : "Compressing photo…",
+    selfieError: he
+      ? "לא הצלחתי לקרוא את התמונה. נסו תמונה אחרת."
+      : "Couldn't read that photo. Try another image.",
     createRoom: he ? "צור חדר" : "Create room",
     joinRoom: he ? "הצטרף לחדר" : "Join room",
     roomCode: he ? "קוד חדר" : "Room code",

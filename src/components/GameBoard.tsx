@@ -436,12 +436,13 @@ export function GameBoard({
                 <div className="kids-pile" aria-label={copy.kidsPile}>
                   <p className="kids-pile-title">{copy.kidsPile}</p>
                   <div className="kids-pile-stack">
+                    {/* column-reverse: winner first in DOM = bottom of pile */}
                     <div className="pile-player pile-winner">
                       {winner.selfie ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={winner.selfie} alt={winner.name} />
                       ) : (
-                        <span>{winner.name.charAt(0).toUpperCase()}</span>
+                        <span>{winner.name.charAt(0).toUpperCase() || "?"}</span>
                       )}
                     </div>
                     {pileKids.map((player, index) => (
@@ -450,7 +451,7 @@ export function GameBoard({
                         className="pile-player pile-kid"
                         style={
                           {
-                            "--pile-index": String(index),
+                            "--pile-index": String(index + 1),
                           } as CSSProperties
                         }
                       >
@@ -458,7 +459,9 @@ export function GameBoard({
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={player.selfie} alt={player.name} />
                         ) : (
-                          <span>{player.name.charAt(0).toUpperCase()}</span>
+                          <span>
+                            {player.name.charAt(0).toUpperCase() || "?"}
+                          </span>
                         )}
                       </div>
                     ))}

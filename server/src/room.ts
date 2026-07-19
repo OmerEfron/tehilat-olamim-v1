@@ -38,8 +38,8 @@ const ROOM_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const MAX_CHAT = 100;
 const MAX_NAME = 24;
 const MAX_CHAT_TEXT = 280;
-const MAX_SELFIE_BYTES = 200_000;
-const MAX_SELFIE_BASE64_LEN = Math.ceil(MAX_SELFIE_BYTES * 1.37);
+/** Matches client compressed selfie payload (~160px JPEG). */
+const MAX_SELFIE_DATA_URL_LEN = 80_000;
 
 export function createRoomCode(): string {
   const bytes = randomBytes(6);
@@ -65,7 +65,7 @@ export function sanitizeSelfie(raw: string | null | undefined): string | null {
   const selfie = raw.trim();
   if (!selfie) return null;
   if (!selfie.startsWith("data:image/")) return null;
-  if (selfie.length > MAX_SELFIE_BASE64_LEN) return null;
+  if (selfie.length > MAX_SELFIE_DATA_URL_LEN) return null;
   return selfie;
 }
 

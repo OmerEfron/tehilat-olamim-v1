@@ -1459,36 +1459,46 @@ body::before {
 
 .kids-pile {
   width: min(22rem, 100%);
-  margin-top: 0.2rem;
+  margin-top: 0.35rem;
 }
 
 .kids-pile-title {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.45rem;
   color: var(--ink-muted);
   font-size: 0.8rem;
   letter-spacing: 0.05em;
 }
 
 .kids-pile-stack {
-  position: relative;
-  min-height: 6rem;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0;
+  min-height: 5.5rem;
+  padding: 0.75rem 0.5rem 0.85rem;
   border-radius: 0.95rem;
   background: rgba(0, 0, 0, 0.24);
   border: 1px solid rgba(226, 197, 123, 0.2);
 }
 
 .pile-player {
-  position: absolute;
+  position: relative;
   width: 3rem;
   height: 3rem;
+  margin-block-start: -0.85rem;
   border-radius: 999px;
   display: grid;
   place-items: center;
   color: var(--gold);
   font-weight: 700;
   background: linear-gradient(145deg, var(--felt-light), var(--felt-deep));
-  border: 1px solid rgba(226, 197, 123, 0.5);
+  border: 2px solid rgba(226, 197, 123, 0.55);
   overflow: hidden;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+}
+
+.pile-player:first-child {
+  margin-block-start: 0;
 }
 
 .pile-player img {
@@ -1498,19 +1508,40 @@ body::before {
 }
 
 .pile-winner {
-  inset-inline-start: 50%;
-  bottom: 0.55rem;
-  transform: translateX(-50%);
-  width: 3.4rem;
-  height: 3.4rem;
+  width: 3.55rem;
+  height: 3.55rem;
   z-index: 1;
-  box-shadow: 0 0 0 3px rgba(226, 197, 123, 0.15);
+  border-color: var(--gold);
+  box-shadow:
+    0 0 0 3px rgba(226, 197, 123, 0.2),
+    0 8px 18px rgba(0, 0, 0, 0.3);
 }
 
 .pile-kid {
-  top: calc(0.3rem + (var(--pile-index, 0) * 0.35rem));
-  inset-inline-start: calc(50% - 1.5rem + (var(--pile-index, 0) * 0.6rem));
-  z-index: 2;
+  z-index: calc(2 + var(--pile-index, 0));
+  margin-inline-start: calc((var(--pile-index, 0) % 2 - 0.5) * 1.1rem);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pile-player {
+    animation: pile-drop 0.45s var(--ease-spring) both;
+    animation-delay: calc(var(--pile-index, 0) * 70ms);
+  }
+
+  .pile-winner {
+    animation-delay: 0ms;
+  }
+}
+
+@keyframes pile-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* —— Mobile: board + always-visible chat dock —— */

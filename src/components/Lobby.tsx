@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { useLocale } from "@/lib/locale";
+import { compressSelfie } from "@/lib/selfie";
 import type { ConnStatus } from "@/hooks/useRoom";
 
 type LobbyProps = {
@@ -32,20 +33,25 @@ export function Lobby({
   const [mode, setMode] = useState<"create" | "join">(
     initialRoomId ? "join" : "create",
   );
+  const [selfieBusy, setSelfieBusy] = useState(false);
+  const [selfieError, setSelfieError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const readSelfie = (event: ChangeEvent<HTMLInputElement>) => {
+  const readSelfie = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) return;
-    if (file.size > 200_000) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result !== "string") return;
-      setSelfie(reader.result);
-    };
-    reader.readAsDataURL(file);
     event.target.value = "";
+    if (!file) return;
+
+    setSelfieBusy(true);
+    setSelfieError(null);
+    try {
+      const dataUrl = await compressSelfie(file);
+      setSelfie(dataUrl);
+    } catch {
+      setSelfieError(copy.selfieError);
+    } finally {
+      setSelfieBusy(false);
+    }
   };
 
   return (
@@ -79,7 +85,7 @@ export function Lobby({
         </label>
 
         <div className="field">
-          <span>{locale === "he" ? "סלפי (אופציונלי)" : "Selfie (optional)"}</span>
+          <span>{copy.selfieLabel}</span>
           <input
             ref={fileRef}
             type="file"
@@ -92,40 +98,40 @@ export function Lobby({
             <button
               type="button"
               className="secondary-btn"
+              disabled={selfieBusy}
               onClick={() => fileRef.current?.click()}
             >
-              {selfie
-                ? locale === "he"
-                  ? "החלף סלפי"
-                  : "Replace selfie"
-                : locale === "he"
-                  ? "צלם / העלה סלפי"
-                  : "Take / upload selfie"}
+              {selfieBusy
+                ? copy.selfieBusy
+                : selfie
+                  ? copy.selfieReplace
+                  : copy.selfieTake}
             </button>
             {selfie ? (
               <button
                 type="button"
                 className="secondary-btn"
-                onClick={() => setSelfie(null)}
+                disabled={selfieBusy}
+                onClick={() => {
+                  setSelfie(null);
+                  setSelfieError(null);
+                }}
               >
-                {locale === "he" ? "הסר" : "Remove"}
+                {copy.selfieRemove}
               </button>
             ) : null}
             {selfie ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={selfie}
-                alt={locale === "he" ? "תצוגת סלפי" : "Selfie preview"}
+                alt={copy.selfiePreview}
                 className="selfie-preview"
               />
             ) : (
-              <span className="selfie-empty">
-                {locale === "he"
-                  ? "ללא סלפי"
-                  : "No selfie yet"}
-              </span>
+              <span className="selfie-empty">{copy.selfieNone}</span>
             )}
           </div>
+          {selfieError ? <p className="lobby-error">{selfieError}</p> : null}
         </div>
 
         <div className="lobby-tabs" role="tablist">
@@ -165,7 +171,7 @@ export function Lobby({
         <button
           type="button"
           className="primary-btn lobby-go"
-          disabled={status === "connecting"}
+          disabled={status === "connecting" || selfieBusy}
           onClick={() => {
             if (mode === "create") onCreate(name, selfie);
             else onJoin(roomCode, name, selfie);
