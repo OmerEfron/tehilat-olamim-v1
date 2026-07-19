@@ -152,6 +152,38 @@ export function t(locale: Locale) {
     missFallbackCopy: he
       ? "ניחוש שגוי. מתחילים שוב מהקלף הראשון."
       : "Wrong guess. Start again from card one.",
+    yourName: he ? "השם שלך" : "Your name",
+    namePlaceholder: he ? "איך קוראים לך?" : "What should we call you?",
+    createRoom: he ? "צור חדר" : "Create room",
+    joinRoom: he ? "הצטרף לחדר" : "Join room",
+    roomCode: he ? "קוד חדר" : "Room code",
+    connecting: he ? "מתחבר…" : "Connecting…",
+    connected: he ? "מחובר" : "Connected",
+    reconnecting: he ? "מתחבר מחדש…" : "Reconnecting…",
+    copyInvite: he ? "העתק קישור הזמנה" : "Copy invite link",
+    copied: he ? "הועתק!" : "Copied!",
+    players: he ? "שחקנים" : "Players",
+    host: he ? "מארח" : "Host",
+    away: he ? "לא מחובר" : "away",
+    startGame: he ? "התחל משחק" : "Start game",
+    startAloneHint: he
+      ? "אפשר להתחיל לבד — חברים יצטרפו תוך כדי."
+      : "You can start alone — friends can join anytime.",
+    waitForHost: he ? "מחכים שהמארח יתחיל…" : "Waiting for the host to start…",
+    lobbyReady: he
+      ? "שתפו את הקישור, או התחילו לבד בינתיים."
+      : "Share the invite, or start alone while you wait.",
+    yourTurn: he ? "התור שלך" : "Your turn",
+    turnOf: (n: string) => (he ? `התור של ${n}` : `${n}'s turn`),
+    waitingTurn: he ? "מחכים לתור של השחקן הבא…" : "Waiting for their turn…",
+    nextPlayer: he ? "שחקן הבא" : "Next player",
+    waitingAdvance: he ? "מחכים למעבר לשחקן הבא…" : "Waiting to pass the turn…",
+    winBy: (n: string) =>
+      he ? `${n} זכה בתהילת עולמים.` : `${n} earned Eternal Glory.`,
+    chat: he ? "צ'אט" : "Chat",
+    chatEmpty: he ? "עדיין אין הודעות." : "No messages yet.",
+    chatPlaceholder: he ? "כתבו משהו…" : "Say something…",
+    send: he ? "שלח" : "Send",
   };
 }
 

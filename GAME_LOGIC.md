@@ -1,5 +1,7 @@
 Game starts with 52 cards deck (no jokers)
 max 9 players
+Multiplayer: host creates a room and shares an invite link. Late joiners are appended last in turn order. On a wrong guess, the turn passes to the next connected player (table clears, deck continues). Chat is available in the room.
+
 for each player, the game goes like that: 
 he needs to guess the next cards, in this order:
 1st card - color (black or red)
@@ -30,4 +32,16 @@ Queen - מלכה
 King - מלך
 
 Eternal Glory - תהילת עולמים
+
+
+Below - מתחת
+Above - מעל
+Borders - גבולות
+Between - בין לבין
+
+When a user is making a wrong guess, it should see the following phrases:
+
+- if he is wrong in the color guess (1st card) - So Weak! כל כך חלש
+- if he is wrong in the second guess - You don't know! אין לך מושג
+- if he is wrong in the third guess - if he didn't say "borders"/"גבולות", "Its always Borders!" ״זה תמיד  גבולות!״ but if he did say borders - Oh sometimes its <what really happend>. for example he said borders but the right answer is below - Oh somtimes its below, right. לפעמים זה מתחת, נכון.
 

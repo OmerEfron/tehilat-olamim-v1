@@ -1,0 +1,8 @@
+node_modules
+server/node_modules
+.next
+out
+.git
+*.md
+.env*
+!server/package.json

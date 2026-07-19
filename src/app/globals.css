@@ -150,7 +150,8 @@ body::before {
 .table-meta {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   margin-bottom: 1.1rem;
   padding: 0 0.25rem;
   color: var(--felt-mist);
@@ -577,3 +578,336 @@ body::before {
     height: 10.5rem;
   }
 }
+
+/* —— Lobby / multiplayer —— */
+
+.lobby {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.25rem 3rem;
+  gap: 1.5rem;
+}
+
+.lobby-panel {
+  width: min(26rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.4rem 1.35rem;
+  background: rgba(8, 30, 22, 0.45);
+  border: 1px solid rgba(226, 197, 123, 0.22);
+  border-radius: 1.1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.field input {
+  appearance: none;
+  border: 1px solid rgba(226, 197, 123, 0.35);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.65rem;
+}
+
+.field input:focus {
+  outline: 2px solid rgba(226, 197, 123, 0.45);
+  outline-offset: 1px;
+}
+
+.lobby-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.lobby-tabs button {
+  appearance: none;
+  border: 1px solid rgba(226, 197, 123, 0.28);
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-weight: 600;
+  padding: 0.55rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.lobby-tabs button.is-active {
+  background: rgba(226, 197, 123, 0.18);
+  color: var(--gold);
+  border-color: rgba(226, 197, 123, 0.55);
+}
+
+.lobby-go {
+  width: 100%;
+}
+
+.lobby-go:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.lobby-status {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+
+.lobby-error,
+.room-error {
+  margin: 0;
+  color: var(--miss);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.room-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  min-height: 100%;
+}
+
+@media (min-width: 960px) {
+  .room-layout {
+    grid-template-columns: minmax(0, 1fr) 18.5rem;
+  }
+}
+
+.room-main {
+  position: relative;
+  min-width: 0;
+}
+
+.room-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-inline-start: 1px solid rgba(226, 197, 123, 0.18);
+  background: rgba(5, 22, 16, 0.55);
+}
+
+.room-sidebar,
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.room-code-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.85rem 0.9rem;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 0.85rem;
+}
+
+.room-label {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.room-code {
+  font-size: 1.55rem;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  font-family: var(--font-display), serif;
+}
+
+.secondary-btn {
+  appearance: none;
+  border: 1px solid rgba(226, 197, 123, 0.4);
+  background: transparent;
+  color: var(--gold);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  background: rgba(226, 197, 123, 0.12);
+}
+
+.player-list h2,
+.chat-title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  letter-spacing: 0.04em;
+}
+
+.player-list ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.player-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.player-list li.is-me {
+  background: rgba(226, 197, 123, 0.1);
+}
+
+.player-list li.is-turn {
+  outline: 1px solid rgba(226, 197, 123, 0.55);
+}
+
+.player-list li.is-away {
+  opacity: 0.5;
+}
+
+.player-order {
+  width: 1.4rem;
+  height: 1.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(226, 197, 123, 0.18);
+  color: var(--gold);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.lobby-wait,
+.lobby-in-room .tagline {
+  margin: 0;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.lobby-in-room {
+  padding: 3rem 1.25rem;
+}
+
+.chat-panel {
+  flex: 1;
+  min-height: 14rem;
+  padding: 0.85rem 0.9rem;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 0.85rem;
+}
+
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 16rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-inline-end: 0.2rem;
+}
+
+.chat-empty {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
+.chat-line {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.88rem;
+}
+
+.chat-line.is-me .chat-name {
+  color: var(--gold);
+}
+
+.chat-name {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--felt-mist);
+}
+
+.chat-text {
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.chat-form input {
+  flex: 1;
+  min-width: 0;
+  appearance: none;
+  border: 1px solid rgba(226, 197, 123, 0.28);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.55rem;
+}
+
+.chat-send {
+  appearance: none;
+  border: none;
+  background: rgba(226, 197, 123, 0.22);
+  color: var(--gold);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.55rem;
+  cursor: pointer;
+}
+
+.turn-you {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.waiting-turn {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  color: var(--ink-muted);
+}
+
+.room-banner {
+  position: sticky;
+  bottom: 0;
+  margin: 0;
+  padding: 0.55rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--gold);
+  font-size: 0.85rem;
+}
+

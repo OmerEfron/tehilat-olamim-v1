@@ -5,7 +5,6 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
-  useReducer,
   useRef,
   useState,
 } from "react";
@@ -17,19 +16,32 @@ import type { Card } from "@/lib/cards";
 import { hitTaunt, missTaunt } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale";
 import { rangeTruth } from "@/lib/truth";
-import {
-  applyGuess,
-  initialState,
-  restartGame,
-  startNextAttempt,
-  type GameState,
-  type Guess,
-} from "@/lib/game";
+import type { Guess, Phase, Step } from "@/lib/game";
 
-type Action =
-  | { type: "guess"; guess: Guess }
-  | { type: "next" }
-  | { type: "restart" };
+export type BoardState = {
+  table: (Card | null)[];
+  step: Step;
+  phase: Phase;
+  lastResult: "correct" | "wrong" | null;
+  lastGuess: Guess | null;
+  missStep: Step | null;
+  deckCount: number;
+  attempts: number;
+};
+
+type GameBoardProps = {
+  state: BoardState;
+  canGuess: boolean;
+  canAdvance: boolean;
+  canRestart: boolean;
+  /** Only one connected player — miss continues as "try again". */
+  solo: boolean;
+  currentPlayerName: string | null;
+  isMyTurn: boolean;
+  onGuess: (guess: Guess) => void;
+  onAdvance: () => void;
+  onRestart: () => void;
+};
 
 type DealPhase = "fly" | "land" | "flip";
 
@@ -50,17 +62,6 @@ type FlyRect = {
 const DEAL_MS = 480;
 const FLIP_MS = 420;
 
-function reducer(state: GameState, action: Action): GameState {
-  switch (action.type) {
-    case "guess":
-      return applyGuess(state, action.guess);
-    case "next":
-      return startNextAttempt(state);
-    case "restart":
-      return restartGame();
-  }
-}
-
 function lastFilledIndex(table: (Card | null)[]): number {
   for (let i = table.length - 1; i >= 0; i -= 1) {
     if (table[i] !== null) return i;
@@ -68,9 +69,23 @@ function lastFilledIndex(table: (Card | null)[]): number {
   return -1;
 }
 
-export function GameBoard() {
+function tableSignature(table: (Card | null)[]): string {
+  return table.map((c) => c?.id ?? "-").join("|");
+}
+
+export function GameBoard({
+  state,
+  canGuess,
+  canAdvance,
+  canRestart,
+  solo,
+  currentPlayerName,
+  isMyTurn,
+  onGuess,
+  onAdvance,
+  onRestart,
+}: GameBoardProps) {
   const { locale, copy, toggleLocale } = useLocale();
-  const [state, dispatch] = useReducer(reducer, undefined, initialState);
   const [busy, setBusy] = useState(false);
   const [deal, setDeal] = useState<DealVisual | null>(null);
   const [fly, setFly] = useState<FlyRect | null>(null);
@@ -84,7 +99,8 @@ export function GameBoard() {
 
   const deckRef = useRef<HTMLDivElement>(null);
   const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const pendingDealRef = useRef(false);
+  const prevSigRef = useRef(tableSignature(state.table));
+  const prevAttemptsRef = useRef(state.attempts);
 
   const beginDeal = useCallback((index: number, card: Card) => {
     setBusy(true);
@@ -92,17 +108,40 @@ export function GameBoard() {
     setDeal({ index, card, phase: "fly" });
   }, []);
 
+  // Reset settled cards when a new attempt / turn starts.
   useEffect(() => {
-    if (!pendingDealRef.current) return;
-    if (state.lastResult === null) return;
+    if (state.attempts !== prevAttemptsRef.current) {
+      prevAttemptsRef.current = state.attempts;
+      setSettled([false, false, false, false, false]);
+      setDeal(null);
+      setFly(null);
+      setBusy(false);
+      prevSigRef.current = tableSignature(state.table);
+    }
+  }, [state.attempts, state.table]);
 
-    const index = lastFilledIndex(state.table);
-    const card = index >= 0 ? state.table[index] : null;
+  // Animate newly revealed cards from remote state.
+  useEffect(() => {
+    const nextSig = tableSignature(state.table);
+    if (nextSig === prevSigRef.current) return;
+
+    const prevIds = prevSigRef.current.split("|");
+    const nextIds = nextSig.split("|");
+    prevSigRef.current = nextSig;
+
+    let newIndex = -1;
+    for (let i = 0; i < nextIds.length; i += 1) {
+      if (nextIds[i] !== "-" && nextIds[i] !== prevIds[i]) {
+        newIndex = i;
+        break;
+      }
+    }
+
+    if (newIndex < 0) return;
+    const card = state.table[newIndex];
     if (!card) return;
-
-    pendingDealRef.current = false;
-    beginDeal(index, card);
-  }, [state.table, state.lastResult, beginDeal]);
+    beginDeal(newIndex, card);
+  }, [state.table, beginDeal]);
 
   useLayoutEffect(() => {
     if (!deal || deal.phase !== "fly") return;
@@ -173,32 +212,28 @@ export function GameBoard() {
     return () => window.clearTimeout(timer);
   }, [deal]);
 
-  const onGuess = useCallback(
+  const handleGuess = useCallback(
     (guess: Guess) => {
-      if (busy || state.phase !== "playing" || deal) return;
-      pendingDealRef.current = true;
+      if (busy || !canGuess || deal) return;
       setBusy(true);
-      dispatch({ type: "guess", guess });
+      onGuess(guess);
     },
-    [busy, state.phase, deal],
+    [busy, canGuess, deal, onGuess],
   );
 
-  const onContinue = () => {
-    pendingDealRef.current = false;
+  const handleAdvance = () => {
     setDeal(null);
     setFly(null);
-    setSettled([false, false, false, false, false]);
     setBusy(false);
-    dispatch({ type: "next" });
+    onAdvance();
   };
 
-  const onRestart = () => {
-    pendingDealRef.current = false;
+  const handleRestart = () => {
     setDeal(null);
     setFly(null);
     setSettled([false, false, false, false, false]);
     setBusy(false);
-    dispatch({ type: "restart" });
+    onRestart();
   };
 
   const animating = Boolean(deal) || busy;
@@ -206,7 +241,6 @@ export function GameBoard() {
   const showMiss = state.phase === "missed" && !animating;
   const filled = lastFilledIndex(state.table);
 
-  // Stable per outcome — re-rolls only when attempt / step / result / locale change.
   const feedbackKey = `${state.attempts}-${state.lastGuess?.step ?? "x"}-${state.lastResult}-${locale}`;
 
   const missText = useMemo(() => {
@@ -250,17 +284,23 @@ export function GameBoard() {
         <h1 className={locale === "he" ? "brand-he" : "brand-en"}>
           {copy.brand}
         </h1>
-        {/* <p className="tagline">{copy.tagline}</p> */}
       </header>
 
       <div className="table-felt" aria-live="polite">
         <div className="table-meta">
           <span>{copy.attempt(state.attempts)}</span>
-          <span>{copy.left(state.deck.length)}</span>
+          <span>{copy.left(state.deckCount)}</span>
+          {currentPlayerName ? (
+            <span className={isMyTurn ? "turn-you" : undefined}>
+              {isMyTurn
+                ? copy.yourTurn
+                : copy.turnOf(currentPlayerName)}
+            </span>
+          ) : null}
         </div>
 
         <div className="table-play" dir="ltr">
-          <DeckPile ref={deckRef} count={state.deck.length} />
+          <DeckPile ref={deckRef} count={state.deckCount} />
 
           <div className="card-row">
             {state.table.map((card, index) => {
@@ -316,20 +356,32 @@ export function GameBoard() {
           </p>
         ) : null}
 
-        {state.phase === "playing" ? (
+        {state.phase === "playing" && canGuess ? (
           <GuessControls
             step={state.step}
             disabled={animating}
-            onGuess={onGuess}
+            onGuess={handleGuess}
           />
+        ) : null}
+
+        {state.phase === "playing" && !canGuess && !animating ? (
+          <p className="waiting-turn">{copy.waitingTurn}</p>
         ) : null}
 
         {showMiss && missText ? (
           <div className="status-panel miss">
             <p className="status-title">{missText}</p>
-            <button type="button" className="primary-btn" onClick={onContinue}>
-              {copy.tryAgain}
-            </button>
+            {canAdvance ? (
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={handleAdvance}
+              >
+                {solo ? copy.tryAgain : copy.nextPlayer}
+              </button>
+            ) : (
+              <p className="status-copy">{copy.waitingAdvance}</p>
+            )}
           </div>
         ) : null}
 
@@ -338,10 +390,20 @@ export function GameBoard() {
             <p className={`status-title ${locale === "he" ? "is-he" : ""}`}>
               {copy.winTitle}
             </p>
-            <p className="status-copy">{copy.winCopy}</p>
-            <button type="button" className="primary-btn" onClick={onRestart}>
-              {copy.playAgain}
-            </button>
+            <p className="status-copy">
+              {currentPlayerName
+                ? copy.winBy(currentPlayerName)
+                : copy.winCopy}
+            </p>
+            {canRestart ? (
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={handleRestart}
+              >
+                {copy.playAgain}
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
