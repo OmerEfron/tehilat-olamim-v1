@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Frank_Ruhl_Libre, Outfit } from "next/font/google";
+import { Cormorant_Garamond, Frank_Ruhl_Libre, Heebo, Outfit } from "next/font/google";
+import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -14,15 +15,21 @@ const body = Outfit({
   weight: ["400", "500", "600", "700"],
 });
 
-const hebrew = Frank_Ruhl_Libre({
+const hebrewDisplay = Frank_Ruhl_Libre({
   variable: "--font-hebrew",
   subsets: ["hebrew", "latin"],
   weight: ["500", "700"],
 });
 
+const hebrewBody = Heebo({
+  variable: "--font-he-body",
+  subsets: ["hebrew", "latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "תהילת עולמים · Tehilat Olamim",
-  description: "Guess five cards in a row and earn Eternal Glory.",
+  description: "חמש ניחושים נכונים. תהילת עולמים אחת.",
 };
 
 export default function RootLayout({
@@ -32,10 +39,13 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${display.variable} ${body.variable} ${hebrew.variable} h-full antialiased`}
+      lang="he"
+      dir="rtl"
+      className={`${display.variable} ${body.variable} ${hebrewDisplay.variable} ${hebrewBody.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

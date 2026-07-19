@@ -1,6 +1,8 @@
 "use client";
 
-import { RANKS, SUITS, rankLabel, suitSymbol, type Suit } from "@/lib/cards";
+import { RANKS, SUITS, suitSymbol, type Suit } from "@/lib/cards";
+import { rankLabel, SUIT_LABEL } from "@/lib/i18n";
+import { useLocale } from "@/lib/locale";
 import type {
   ColorGuess,
   Guess,
@@ -41,17 +43,23 @@ function ChoiceButton({
 }
 
 export function GuessControls({ step, disabled, onGuess }: GuessControlsProps) {
+  const { locale, copy } = useLocale();
+
   if (step === 1) {
     const pick = (value: ColorGuess) => onGuess({ step: 1, value });
     return (
       <div className="guess-panel">
-        <p className="guess-prompt">Guess the color</p>
+        <p className="guess-prompt">{copy.prompts[1]}</p>
         <div className="guess-row">
           <ChoiceButton tone="red" disabled={disabled} onClick={() => pick("red")}>
-            Red
+            {copy.red}
           </ChoiceButton>
-          <ChoiceButton tone="black" disabled={disabled} onClick={() => pick("black")}>
-            Black
+          <ChoiceButton
+            tone="black"
+            disabled={disabled}
+            onClick={() => pick("black")}
+          >
+            {copy.black}
           </ChoiceButton>
         </div>
       </div>
@@ -62,16 +70,16 @@ export function GuessControls({ step, disabled, onGuess }: GuessControlsProps) {
     const pick = (value: HighLowGuess) => onGuess({ step: 2, value });
     return (
       <div className="guess-panel">
-        <p className="guess-prompt">Higher, lower, or borders?</p>
+        <p className="guess-prompt">{copy.prompts[2]}</p>
         <div className="guess-row">
           <ChoiceButton disabled={disabled} onClick={() => pick("above")}>
-            Above
+            {copy.above}
           </ChoiceButton>
           <ChoiceButton disabled={disabled} onClick={() => pick("below")}>
-            Below
+            {copy.below}
           </ChoiceButton>
           <ChoiceButton disabled={disabled} onClick={() => pick("borders")}>
-            Borders
+            {copy.borders}
           </ChoiceButton>
         </div>
       </div>
@@ -82,19 +90,19 @@ export function GuessControls({ step, disabled, onGuess }: GuessControlsProps) {
     const pick = (value: RangeGuess) => onGuess({ step: 3, value });
     return (
       <div className="guess-panel">
-        <p className="guess-prompt">Where is the next card?</p>
+        <p className="guess-prompt">{copy.prompts[3]}</p>
         <div className="guess-row wrap">
           <ChoiceButton disabled={disabled} onClick={() => pick("below")}>
-            Below
+            {copy.below}
           </ChoiceButton>
           <ChoiceButton disabled={disabled} onClick={() => pick("between")}>
-            Between
+            {copy.between}
           </ChoiceButton>
           <ChoiceButton disabled={disabled} onClick={() => pick("above")}>
-            Above
+            {copy.above}
           </ChoiceButton>
           <ChoiceButton disabled={disabled} onClick={() => pick("borders")}>
-            Borders
+            {copy.borders}
           </ChoiceButton>
         </div>
       </div>
@@ -103,17 +111,11 @@ export function GuessControls({ step, disabled, onGuess }: GuessControlsProps) {
 
   if (step === 4) {
     const pick = (value: SuitGuess) => onGuess({ step: 4, value });
-    const labels: Record<Suit, string> = {
-      hearts: "Hearts",
-      diamonds: "Diamonds",
-      clubs: "Clubs",
-      spades: "Spades",
-    };
     return (
       <div className="guess-panel">
-        <p className="guess-prompt">Guess the suit</p>
+        <p className="guess-prompt">{copy.prompts[4]}</p>
         <div className="guess-row wrap">
-          {SUITS.map((suit) => (
+          {SUITS.map((suit: Suit) => (
             <ChoiceButton
               key={suit}
               tone={suit}
@@ -121,7 +123,7 @@ export function GuessControls({ step, disabled, onGuess }: GuessControlsProps) {
               onClick={() => pick(suit)}
             >
               <span className="suit-glyph">{suitSymbol(suit)}</span>
-              {labels[suit]}
+              {SUIT_LABEL[locale][suit]}
             </ChoiceButton>
           ))}
         </div>
@@ -132,11 +134,11 @@ export function GuessControls({ step, disabled, onGuess }: GuessControlsProps) {
   const pick = (value: RankGuess) => onGuess({ step: 5, value });
   return (
     <div className="guess-panel">
-      <p className="guess-prompt">Guess the rank</p>
+      <p className="guess-prompt">{copy.prompts[5]}</p>
       <div className="guess-row wrap ranks">
         {RANKS.map((rank) => (
           <ChoiceButton key={rank} disabled={disabled} onClick={() => pick(rank)}>
-            {rankLabel(rank)}
+            {rankLabel(rank, locale)}
           </ChoiceButton>
         ))}
       </div>

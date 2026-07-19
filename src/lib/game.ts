@@ -30,6 +30,9 @@ export type GameState = {
   step: Step;
   phase: Phase;
   lastResult: "correct" | "wrong" | null;
+  lastGuess: Guess | null;
+  /** Step the player failed on (for miss taunts). */
+  missStep: Step | null;
   attempts: number;
 };
 
@@ -40,6 +43,8 @@ export function initialState(): GameState {
     step: 1,
     phase: "playing",
     lastResult: null,
+    lastGuess: null,
+    missStep: null,
     attempts: 1,
   };
 }
@@ -117,6 +122,8 @@ export function applyGuess(state: GameState, guess: Guess): GameState {
       table,
       phase: "missed",
       lastResult: "wrong",
+      lastGuess: guess,
+      missStep: state.step,
     };
   }
 
@@ -127,6 +134,8 @@ export function applyGuess(state: GameState, guess: Guess): GameState {
       table,
       phase: "won",
       lastResult: "correct",
+      lastGuess: guess,
+      missStep: null,
     };
   }
 
@@ -137,6 +146,8 @@ export function applyGuess(state: GameState, guess: Guess): GameState {
     step: (state.step + 1) as Step,
     phase: "playing",
     lastResult: "correct",
+    lastGuess: guess,
+    missStep: null,
   };
 }
 
@@ -148,6 +159,8 @@ export function startNextAttempt(state: GameState): GameState {
     step: 1,
     phase: "playing",
     lastResult: null,
+    lastGuess: null,
+    missStep: null,
     attempts: state.attempts + 1,
   };
 }
