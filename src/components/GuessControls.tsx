@@ -135,7 +135,7 @@ export function GuessControls({ step, disabled, onGuess }: GuessControlsProps) {
   return (
     <div className="guess-panel">
       <p className="guess-prompt">{copy.prompts[5]}</p>
-      <div className="guess-row wrap ranks">
+      <div className="guess-row ranks">
         {RANKS.map((rank) => (
           <ChoiceButton key={rank} disabled={disabled} onClick={() => pick(rank)}>
             {rankLabel(rank, locale)}

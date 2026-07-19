@@ -9,9 +9,16 @@ type RoomSidebarProps = {
   room: PublicRoomState;
   playerId: string | null;
   onStart: () => void;
+  /** When true, Start lives in the main lobby gather area. */
+  hideStart?: boolean;
 };
 
-export function RoomSidebar({ room, playerId, onStart }: RoomSidebarProps) {
+export function RoomSidebar({
+  room,
+  playerId,
+  onStart,
+  hideStart = false,
+}: RoomSidebarProps) {
   const { copy } = useLocale();
   const [copied, setCopied] = useState(false);
   const isHost = playerId === room.hostId;
@@ -23,7 +30,6 @@ export function RoomSidebar({ room, playerId, onStart }: RoomSidebarProps) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
-      // fallback
       window.prompt(copy.copyInvite, link);
     }
   };
@@ -67,7 +73,7 @@ export function RoomSidebar({ room, playerId, onStart }: RoomSidebarProps) {
         </ol>
       </div>
 
-      {room.status === "lobby" && isHost ? (
+      {!hideStart && room.status === "lobby" && isHost ? (
         <>
           <button type="button" className="primary-btn" onClick={onStart}>
             {copy.startGame}
@@ -76,7 +82,7 @@ export function RoomSidebar({ room, playerId, onStart }: RoomSidebarProps) {
         </>
       ) : null}
 
-      {room.status === "lobby" && !isHost ? (
+      {!hideStart && room.status === "lobby" && !isHost ? (
         <p className="lobby-wait">{copy.waitForHost}</p>
       ) : null}
     </aside>

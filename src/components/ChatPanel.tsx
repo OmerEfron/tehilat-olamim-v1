@@ -8,9 +8,16 @@ type ChatPanelProps = {
   messages: ChatMessage[];
   playerId: string | null;
   onSend: (text: string) => void;
+  /** Tighter layout for always-visible play dock. */
+  compact?: boolean;
 };
 
-export function ChatPanel({ messages, playerId, onSend }: ChatPanelProps) {
+export function ChatPanel({
+  messages,
+  playerId,
+  onSend,
+  compact = false,
+}: ChatPanelProps) {
   const { copy } = useLocale();
   const [text, setText] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
@@ -30,7 +37,10 @@ export function ChatPanel({ messages, playerId, onSend }: ChatPanelProps) {
   };
 
   return (
-    <aside className="chat-panel" aria-label={copy.chat}>
+    <aside
+      className={`chat-panel ${compact ? "is-compact" : ""}`}
+      aria-label={copy.chat}
+    >
       <h2 className="chat-title">{copy.chat}</h2>
       <div className="chat-list" ref={listRef}>
         {messages.length === 0 ? (

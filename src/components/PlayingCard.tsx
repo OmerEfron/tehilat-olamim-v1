@@ -10,6 +10,9 @@ type PlayingCardProps = {
   faceUp?: boolean;
   label?: string;
   highlight?: "correct" | "wrong" | null;
+  /** Active step / future dimming for play hierarchy. */
+  slotState?: "active" | "future" | "done" | null;
+  winGlow?: boolean;
   className?: string;
 };
 
@@ -21,6 +24,8 @@ export const PlayingCard = forwardRef<HTMLDivElement, PlayingCardProps>(
       faceUp = false,
       label,
       highlight = null,
+      slotState = null,
+      winGlow = false,
       className = "",
     },
     ref,
@@ -29,8 +34,18 @@ export const PlayingCard = forwardRef<HTMLDivElement, PlayingCardProps>(
     const symbol = card ? suitSymbol(card.suit) : "";
     const showCard = Boolean(card) && !empty;
 
+    const slotClass = [
+      "card-slot",
+      slotState === "active" ? "is-active" : "",
+      slotState === "future" ? "is-future" : "",
+      winGlow ? "is-win-glow" : "",
+      className,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     return (
-      <div className={`card-slot ${className}`}>
+      <div className={slotClass}>
         {label ? <span className="card-slot-label">{label}</span> : null}
         <div
           ref={ref}

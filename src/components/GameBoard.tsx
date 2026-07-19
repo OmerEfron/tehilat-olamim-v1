@@ -240,6 +240,7 @@ export function GameBoard({
   const showWin = state.phase === "won" && !animating;
   const showMiss = state.phase === "missed" && !animating;
   const filled = lastFilledIndex(state.table);
+  const activeIndex = state.phase === "playing" ? state.step - 1 : filled;
 
   const feedbackKey = `${state.attempts}-${state.lastGuess?.step ?? "x"}-${state.lastResult}-${locale}`;
 
@@ -269,6 +270,17 @@ export function GameBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- feedbackKey pins the random pick
   }, [feedbackKey, state.lastResult, state.lastGuess?.step, state.phase]);
 
+  const showHit =
+    state.phase === "playing" && Boolean(hitText) && !animating;
+
+  const feltTone = showWin
+    ? "is-win"
+    : showMiss
+      ? "is-miss"
+      : showHit
+        ? "is-hit"
+        : "";
+
   return (
     <div className="board" lang={locale} dir={locale === "he" ? "rtl" : "ltr"}>
       <button
@@ -280,24 +292,26 @@ export function GameBoard({
         {locale === "he" ? "EN" : "עב"}
       </button>
 
-      <header className="board-header">
+      <header className="board-header is-compact">
         <h1 className={locale === "he" ? "brand-he" : "brand-en"}>
           {copy.brand}
         </h1>
       </header>
 
-      <div className="table-felt" aria-live="polite">
+      <div className={`table-felt ${feltTone}`} aria-live="polite">
         <div className="table-meta">
           <span>{copy.attempt(state.attempts)}</span>
           <span>{copy.left(state.deckCount)}</span>
-          {currentPlayerName ? (
-            <span className={isMyTurn ? "turn-you" : undefined}>
-              {isMyTurn
-                ? copy.yourTurn
-                : copy.turnOf(currentPlayerName)}
-            </span>
-          ) : null}
         </div>
+
+        {currentPlayerName && state.phase !== "won" ? (
+          <div
+            className={`turn-pill ${isMyTurn ? "is-you" : ""}`}
+            aria-live="polite"
+          >
+            {isMyTurn ? copy.yourTurn : copy.turnOf(currentPlayerName)}
+          </div>
+        ) : null}
 
         <div className="table-play" dir="ltr">
           <DeckPile ref={deckRef} count={state.deckCount} />
@@ -333,6 +347,13 @@ export function GameBoard({
                 highlight = "wrong";
               }
 
+              let slotState: "active" | "future" | "done" | null = null;
+              if (state.phase === "playing" || state.phase === "revealing") {
+                if (index === activeIndex) slotState = "active";
+                else if (index > activeIndex) slotState = "future";
+                else slotState = "done";
+              }
+
               return (
                 <PlayingCard
                   key={`slot-${index}`}
@@ -344,68 +365,72 @@ export function GameBoard({
                   faceUp={faceUp}
                   label={copy.steps[index]}
                   highlight={highlight}
+                  slotState={slotState}
+                  winGlow={showWin && settled[index]}
                 />
               );
             })}
           </div>
         </div>
 
-        {state.phase === "playing" && hitText && !animating ? (
-          <p className="hit-reaction" aria-live="polite">
-            {hitText}
-          </p>
-        ) : null}
-
-        {state.phase === "playing" && canGuess ? (
-          <GuessControls
-            step={state.step}
-            disabled={animating}
-            onGuess={handleGuess}
-          />
-        ) : null}
-
-        {state.phase === "playing" && !canGuess && !animating ? (
-          <p className="waiting-turn">{copy.waitingTurn}</p>
-        ) : null}
-
-        {showMiss && missText ? (
-          <div className="status-panel miss">
-            <p className="status-title">{missText}</p>
-            {canAdvance ? (
-              <button
-                type="button"
-                className="primary-btn"
-                onClick={handleAdvance}
-              >
-                {solo ? copy.tryAgain : copy.nextPlayer}
-              </button>
-            ) : (
-              <p className="status-copy">{copy.waitingAdvance}</p>
-            )}
-          </div>
-        ) : null}
-
-        {showWin ? (
-          <div className="status-panel win">
-            <p className={`status-title ${locale === "he" ? "is-he" : ""}`}>
-              {copy.winTitle}
+        <div className="feedback-stage">
+          {state.phase === "playing" && hitText && !animating ? (
+            <p className="hit-reaction" aria-live="polite">
+              {hitText}
             </p>
-            <p className="status-copy">
-              {currentPlayerName
-                ? copy.winBy(currentPlayerName)
-                : copy.winCopy}
-            </p>
-            {canRestart ? (
-              <button
-                type="button"
-                className="primary-btn"
-                onClick={handleRestart}
-              >
-                {copy.playAgain}
-              </button>
-            ) : null}
-          </div>
-        ) : null}
+          ) : null}
+
+          {state.phase === "playing" && canGuess ? (
+            <GuessControls
+              step={state.step}
+              disabled={animating}
+              onGuess={handleGuess}
+            />
+          ) : null}
+
+          {state.phase === "playing" && !canGuess && !animating ? (
+            <p className="waiting-turn">{copy.waitingTurn}</p>
+          ) : null}
+
+          {showMiss && missText ? (
+            <div className="status-panel miss">
+              <p className="status-title">{missText}</p>
+              {canAdvance ? (
+                <button
+                  type="button"
+                  className="primary-btn"
+                  onClick={handleAdvance}
+                >
+                  {solo ? copy.tryAgain : copy.nextPlayer}
+                </button>
+              ) : (
+                <p className="status-copy">{copy.waitingAdvance}</p>
+              )}
+            </div>
+          ) : null}
+
+          {showWin ? (
+            <div className="status-panel win">
+              <p className={`status-title ${locale === "he" ? "is-he" : ""}`}>
+                {copy.winTitle}
+              </p>
+              <p className="status-copy">
+                {currentPlayerName
+                  ? copy.winBy(currentPlayerName)
+                  : copy.winCopy}
+              </p>
+              {canRestart ? (
+                <button
+                  type="button"
+                  className="primary-btn is-lg"
+                  onClick={handleRestart}
+                >
+                  {copy.playAgain}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {fly ? (
