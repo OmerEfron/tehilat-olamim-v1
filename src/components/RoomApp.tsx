@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChatPanel } from "@/components/ChatPanel";
 import { GameBoard } from "@/components/GameBoard";
 import { Lobby } from "@/components/Lobby";
@@ -11,15 +11,11 @@ import { roomFromLocation } from "@/lib/session";
 import { useLocale } from "@/lib/locale";
 
 export function RoomApp() {
-  const [initialRoomId, setInitialRoomId] = useState<string | null>(null);
+  const [initialRoomId] = useState<string | null>(() => roomFromLocation());
   const { copy } = useLocale();
   const roomApi = useRoom(initialRoomId);
 
-  useEffect(() => {
-    setInitialRoomId(roomFromLocation());
-  }, []);
-
-  const { room, playerId, status, error, name, setName } = roomApi;
+  const { room, playerId, status, error, name, selfie, setName, setSelfie } = roomApi;
   const inPlay = Boolean(
     room && (room.status === "playing" || room.status === "finished"),
   );
@@ -28,7 +24,9 @@ export function RoomApp() {
     return (
       <Lobby
         name={name}
+        selfie={selfie}
         setName={setName}
+        setSelfie={setSelfie}
         initialRoomId={initialRoomId}
         status={status}
         error={error}
@@ -90,6 +88,8 @@ export function RoomApp() {
                   ? (winner?.name ?? null)
                   : (current?.name ?? null)
               }
+              players={room.players}
+              winnerId={room.winnerId}
               isMyTurn={isMyTurn}
               onGuess={roomApi.guess}
               onAdvance={roomApi.advance}

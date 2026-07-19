@@ -42,7 +42,12 @@ export function PlayerStrip({
               .join(" ")}
           >
             <span className="player-avatar" aria-hidden>
-              {initial(p.name)}
+              {p.selfie ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.selfie} alt="" />
+              ) : (
+                initial(p.name)
+              )}
             </span>
             <span className="player-chip-name">{p.name}</span>
           </div>

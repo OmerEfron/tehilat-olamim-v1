@@ -1,22 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { useLocale } from "@/lib/locale";
 import type { ConnStatus } from "@/hooks/useRoom";
 
 type LobbyProps = {
   name: string;
+  selfie: string | null;
   setName: (name: string) => void;
+  setSelfie: (selfie: string | null) => void;
   initialRoomId: string | null;
   status: ConnStatus;
   error: string | null;
-  onCreate: (name: string) => void;
-  onJoin: (roomId: string, name: string) => void;
+  onCreate: (name: string, selfie: string | null) => void;
+  onJoin: (roomId: string, name: string, selfie: string | null) => void;
 };
 
 export function Lobby({
   name,
+  selfie,
   setName,
+  setSelfie,
   initialRoomId,
   status,
   error,
@@ -28,6 +32,21 @@ export function Lobby({
   const [mode, setMode] = useState<"create" | "join">(
     initialRoomId ? "join" : "create",
   );
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const readSelfie = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > 200_000) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") return;
+      setSelfie(reader.result);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
 
   return (
     <div className="lobby" lang={locale} dir={locale === "he" ? "rtl" : "ltr"}>
@@ -58,6 +77,56 @@ export function Lobby({
             placeholder={copy.namePlaceholder}
           />
         </label>
+
+        <div className="field">
+          <span>{locale === "he" ? "סלפי (אופציונלי)" : "Selfie (optional)"}</span>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="user"
+            onChange={readSelfie}
+            className="selfie-input"
+          />
+          <div className="selfie-row">
+            <button
+              type="button"
+              className="secondary-btn"
+              onClick={() => fileRef.current?.click()}
+            >
+              {selfie
+                ? locale === "he"
+                  ? "החלף סלפי"
+                  : "Replace selfie"
+                : locale === "he"
+                  ? "צלם / העלה סלפי"
+                  : "Take / upload selfie"}
+            </button>
+            {selfie ? (
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={() => setSelfie(null)}
+              >
+                {locale === "he" ? "הסר" : "Remove"}
+              </button>
+            ) : null}
+            {selfie ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={selfie}
+                alt={locale === "he" ? "תצוגת סלפי" : "Selfie preview"}
+                className="selfie-preview"
+              />
+            ) : (
+              <span className="selfie-empty">
+                {locale === "he"
+                  ? "ללא סלפי"
+                  : "No selfie yet"}
+              </span>
+            )}
+          </div>
+        </div>
 
         <div className="lobby-tabs" role="tablist">
           <button
@@ -98,8 +167,8 @@ export function Lobby({
           className="primary-btn lobby-go"
           disabled={status === "connecting"}
           onClick={() => {
-            if (mode === "create") onCreate(name);
-            else onJoin(roomCode, name);
+            if (mode === "create") onCreate(name, selfie);
+            else onJoin(roomCode, name, selfie);
           }}
         >
           {mode === "create" ? copy.createRoom : copy.joinRoom}

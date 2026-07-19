@@ -180,6 +180,7 @@ export function t(locale: Locale) {
     waitingAdvance: he ? "מחכים למעבר לשחקן הבא…" : "Waiting to pass the turn…",
     winBy: (n: string) =>
       he ? `${n} זכה בתהילת עולמים.` : `${n} earned Eternal Glory.`,
+    kidsPile: he ? "ערימת ילדים" : "A pile of children",
     chat: he ? "צ'אט" : "Chat",
     chatEmpty: he ? "עדיין אין הודעות." : "No messages yet.",
     chatPlaceholder: he ? "כתבו משהו…" : "Say something…",

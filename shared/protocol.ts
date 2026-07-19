@@ -5,6 +5,7 @@ export type PlayerPublic = {
   id: string;
   name: string;
   connected: boolean;
+  selfie: string | null;
 };
 
 export type ChatMessage = {
@@ -40,9 +41,15 @@ export type PublicRoomState = {
 };
 
 export type ClientMessage =
-  | { type: "create_room"; name: string }
-  | { type: "join_room"; roomId: string; name: string }
-  | { type: "rejoin"; roomId: string; playerId: string; name: string }
+  | { type: "create_room"; name: string; selfie: string | null }
+  | { type: "join_room"; roomId: string; name: string; selfie: string | null }
+  | {
+      type: "rejoin";
+      roomId: string;
+      playerId: string;
+      name: string;
+      selfie: string | null;
+    }
   | { type: "start_game" }
   | { type: "guess"; guess: Guess }
   | { type: "advance" }

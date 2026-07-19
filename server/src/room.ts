@@ -19,6 +19,7 @@ export type Player = {
   id: string;
   name: string;
   connected: boolean;
+  selfie: string | null;
 };
 
 export type Room = {
@@ -37,6 +38,8 @@ const ROOM_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const MAX_CHAT = 100;
 const MAX_NAME = 24;
 const MAX_CHAT_TEXT = 280;
+const MAX_SELFIE_BYTES = 200_000;
+const MAX_SELFIE_BASE64_LEN = Math.ceil(MAX_SELFIE_BYTES * 1.37);
 
 export function createRoomCode(): string {
   const bytes = randomBytes(6);
@@ -57,13 +60,25 @@ export function sanitizeChat(raw: string): string | null {
   return text.length > 0 ? text : null;
 }
 
-export function createRoom(hostName: string): { room: Room; playerId: string } {
+export function sanitizeSelfie(raw: string | null | undefined): string | null {
+  if (typeof raw !== "string") return null;
+  const selfie = raw.trim();
+  if (!selfie) return null;
+  if (!selfie.startsWith("data:image/")) return null;
+  if (selfie.length > MAX_SELFIE_BASE64_LEN) return null;
+  return selfie;
+}
+
+export function createRoom(
+  hostName: string,
+  selfie: string | null,
+): { room: Room; playerId: string } {
   const playerId = randomUUID();
   const room: Room = {
     id: createRoomCode(),
     hostId: playerId,
     status: "lobby",
-    players: [{ id: playerId, name: hostName, connected: true }],
+    players: [{ id: playerId, name: hostName, connected: true, selfie }],
     turnIndex: 0,
     game: null,
     winnerId: null,
@@ -85,6 +100,7 @@ export function toPublic(room: Room): PublicRoomState {
       id: p.id,
       name: p.name,
       connected: p.connected,
+      selfie: p.selfie,
     })),
     turnIndex: room.turnIndex,
     currentPlayerId: current?.id ?? null,
@@ -118,13 +134,14 @@ function nextConnectedTurnIndex(room: Room, fromIndex: number): number {
 export function addPlayer(
   room: Room,
   name: string,
+  selfie: string | null,
 ): { playerId: string } | { error: string } {
   if (room.players.length >= MAX_PLAYERS) {
     return { error: "Room is full (max 9 players)." };
   }
 
   const playerId = randomUUID();
-  room.players.push({ id: playerId, name, connected: true });
+  room.players.push({ id: playerId, name, connected: true, selfie });
   // Late join: always appended — already last in order.
   return { playerId };
 }
@@ -133,6 +150,7 @@ export function rejoinPlayer(
   room: Room,
   playerId: string,
   name: string,
+  selfie: string | null,
 ): { ok: true } | { error: string } {
   const player = room.players.find((p) => p.id === playerId);
   if (!player) {
@@ -140,6 +158,7 @@ export function rejoinPlayer(
   }
   player.connected = true;
   player.name = name;
+  player.selfie = selfie;
   return { ok: true };
 }
 

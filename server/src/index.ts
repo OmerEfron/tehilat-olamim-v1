@@ -12,6 +12,7 @@ import {
   rejoinPlayer,
   restartRoom,
   sanitizeName,
+  sanitizeSelfie,
   startGame,
   toPublic,
   type Room,
@@ -66,11 +67,12 @@ function handleMessage(client: Client, msg: ClientMessage): void {
   switch (msg.type) {
     case "create_room": {
       const name = sanitizeName(msg.name);
+      const selfie = sanitizeSelfie(msg.selfie);
       if (!name) {
         send(client.ws, { type: "error", message: "Name is required." });
         return;
       }
-      const { room, playerId } = createRoom(name);
+      const { room, playerId } = createRoom(name, selfie);
       rooms.set(room.id, room);
       client.playerId = playerId;
       client.roomId = room.id;
@@ -85,6 +87,7 @@ function handleMessage(client: Client, msg: ClientMessage): void {
 
     case "join_room": {
       const name = sanitizeName(msg.name);
+      const selfie = sanitizeSelfie(msg.selfie);
       if (!name) {
         send(client.ws, { type: "error", message: "Name is required." });
         return;
@@ -94,7 +97,7 @@ function handleMessage(client: Client, msg: ClientMessage): void {
         send(client.ws, { type: "error", message: "Room not found." });
         return;
       }
-      const result = addPlayer(room, name);
+      const result = addPlayer(room, name, selfie);
       if ("error" in result) {
         send(client.ws, { type: "error", message: result.error });
         return;
@@ -113,6 +116,7 @@ function handleMessage(client: Client, msg: ClientMessage): void {
 
     case "rejoin": {
       const name = sanitizeName(msg.name);
+      const selfie = sanitizeSelfie(msg.selfie);
       if (!name) {
         send(client.ws, { type: "error", message: "Name is required." });
         return;
@@ -122,7 +126,7 @@ function handleMessage(client: Client, msg: ClientMessage): void {
         send(client.ws, { type: "error", message: "Room not found." });
         return;
       }
-      const result = rejoinPlayer(room, msg.playerId, name);
+      const result = rejoinPlayer(room, msg.playerId, name, selfie);
       if ("error" in result) {
         send(client.ws, { type: "error", message: result.error });
         return;

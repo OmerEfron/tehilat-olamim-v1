@@ -1,4 +1,5 @@
 const NAME_KEY = "to-name";
+const SELFIE_KEY = "to-selfie";
 const PLAYER_KEY = "to-player";
 
 export function loadName(): string {
@@ -8,6 +9,17 @@ export function loadName(): string {
 
 export function saveName(name: string): void {
   localStorage.setItem(NAME_KEY, name);
+}
+
+export function loadSelfie(): string | null {
+  if (typeof window === "undefined") return null;
+  const selfie = localStorage.getItem(SELFIE_KEY);
+  return selfie && selfie.startsWith("data:image/") ? selfie : null;
+}
+
+export function saveSelfie(selfie: string | null): void {
+  if (selfie) localStorage.setItem(SELFIE_KEY, selfie);
+  else localStorage.removeItem(SELFIE_KEY);
 }
 
 export function loadPlayerId(roomId: string): string | null {

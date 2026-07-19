@@ -5,8 +5,10 @@ import type { Guess } from "@/lib/game";
 import type { PublicRoomState, ServerMessage } from "@/lib/protocol";
 import {
   loadName,
+  loadSelfie,
   loadPlayerId,
   saveName,
+  saveSelfie,
   savePlayerId,
   setRoomInUrl,
 } from "@/lib/session";
@@ -19,7 +21,8 @@ export function useRoom(initialRoomId: string | null) {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [room, setRoom] = useState<PublicRoomState | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [name, setNameState] = useState("");
+  const [name, setNameState] = useState(() => loadName());
+  const [selfie, setSelfieState] = useState<string | null>(() => loadSelfie());
 
   const sendRef = useRef<(msg: Parameters<ReturnType<typeof connectWs>["send"]>[0]) => void>(
     () => {},
@@ -29,13 +32,10 @@ export function useRoom(initialRoomId: string | null) {
     roomId?: string;
     playerId?: string;
     name: string;
+    selfie: string | null;
   } | null>(null);
   const roomRef = useRef<PublicRoomState | null>(null);
   const playerIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    setNameState(loadName());
-  }, []);
 
   useEffect(() => {
     roomRef.current = room;
@@ -86,12 +86,17 @@ export function useRoom(initialRoomId: string | null) {
     pendingJoin.current = null;
 
     if (pending.kind === "create") {
-      sendRef.current({ type: "create_room", name: pending.name });
+      sendRef.current({
+        type: "create_room",
+        name: pending.name,
+        selfie: pending.selfie,
+      });
     } else if (pending.kind === "join" && pending.roomId) {
       sendRef.current({
         type: "join_room",
         roomId: pending.roomId,
         name: pending.name,
+        selfie: pending.selfie,
       });
     } else if (
       pending.kind === "rejoin" &&
@@ -103,6 +108,7 @@ export function useRoom(initialRoomId: string | null) {
         roomId: pending.roomId,
         playerId: pending.playerId,
         name: pending.name,
+        selfie: pending.selfie,
       });
     }
   }, [status]);
@@ -112,6 +118,7 @@ export function useRoom(initialRoomId: string | null) {
     if (status !== "open" || room || !initialRoomId) return;
     const storedName = loadName();
     if (!storedName) return;
+    const storedSelfie = loadSelfie();
 
     const storedPlayer = loadPlayerId(initialRoomId);
     if (storedPlayer) {
@@ -120,6 +127,7 @@ export function useRoom(initialRoomId: string | null) {
         roomId: initialRoomId,
         playerId: storedPlayer,
         name: storedName,
+        selfie: storedSelfie,
       });
     }
   }, [status, room, initialRoomId]);
@@ -130,26 +138,36 @@ export function useRoom(initialRoomId: string | null) {
   }, []);
 
   const createRoom = useCallback(
-    (playerName: string) => {
+    (playerName: string, playerSelfie: string | null) => {
       const clean = playerName.trim();
       if (!clean) {
         setError("Name is required.");
         return;
       }
       saveName(clean);
+      saveSelfie(playerSelfie);
       setNameState(clean);
+      setSelfieState(playerSelfie);
       setError(null);
       if (status === "open") {
-        sendRef.current({ type: "create_room", name: clean });
+        sendRef.current({
+          type: "create_room",
+          name: clean,
+          selfie: playerSelfie,
+        });
       } else {
-        pendingJoin.current = { kind: "create", name: clean };
+        pendingJoin.current = {
+          kind: "create",
+          name: clean,
+          selfie: playerSelfie,
+        };
       }
     },
     [status],
   );
 
   const joinRoom = useCallback(
-    (roomId: string, playerName: string) => {
+    (roomId: string, playerName: string, playerSelfie: string | null) => {
       const clean = playerName.trim();
       const code = roomId.trim().toUpperCase();
       if (!clean) {
@@ -161,7 +179,9 @@ export function useRoom(initialRoomId: string | null) {
         return;
       }
       saveName(clean);
+      saveSelfie(playerSelfie);
       setNameState(clean);
+      setSelfieState(playerSelfie);
       setError(null);
 
       const storedPlayer = loadPlayerId(code);
@@ -171,6 +191,7 @@ export function useRoom(initialRoomId: string | null) {
           roomId: code,
           playerId: storedPlayer,
           name: clean,
+          selfie: playerSelfie,
         };
         if (status === "open") sendRef.current(payload);
         else {
@@ -179,19 +200,35 @@ export function useRoom(initialRoomId: string | null) {
             roomId: code,
             playerId: storedPlayer,
             name: clean,
+            selfie: playerSelfie,
           };
         }
         return;
       }
 
       if (status === "open") {
-        sendRef.current({ type: "join_room", roomId: code, name: clean });
+        sendRef.current({
+          type: "join_room",
+          roomId: code,
+          name: clean,
+          selfie: playerSelfie,
+        });
       } else {
-        pendingJoin.current = { kind: "join", roomId: code, name: clean };
+        pendingJoin.current = {
+          kind: "join",
+          roomId: code,
+          name: clean,
+          selfie: playerSelfie,
+        };
       }
     },
     [status],
   );
+
+  const setSelfie = useCallback((value: string | null) => {
+    setSelfieState(value);
+    saveSelfie(value);
+  }, []);
 
   const startGame = useCallback(() => {
     sendRef.current({ type: "start_game" });
@@ -221,7 +258,9 @@ export function useRoom(initialRoomId: string | null) {
     room,
     error,
     name,
+    selfie,
     setName,
+    setSelfie,
     createRoom,
     joinRoom,
     startGame,

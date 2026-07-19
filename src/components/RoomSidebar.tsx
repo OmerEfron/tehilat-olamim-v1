@@ -50,6 +50,7 @@ export function RoomSidebar({
           {room.players.map((p, i) => {
             const isTurn =
               room.status === "playing" && room.currentPlayerId === p.id;
+            const fallback = p.name.trim().charAt(0).toUpperCase() || "?";
             return (
               <li
                 key={p.id}
@@ -62,6 +63,14 @@ export function RoomSidebar({
                   .join(" ")}
               >
                 <span className="player-order">{i + 1}</span>
+                <span className="player-order player-thumb" aria-hidden>
+                  {p.selfie ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.selfie} alt="" />
+                  ) : (
+                    fallback
+                  )}
+                </span>
                 <span className="player-name">
                   {p.name}
                   {p.id === room.hostId ? ` · ${copy.host}` : ""}

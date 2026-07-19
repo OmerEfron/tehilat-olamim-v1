@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type CSSProperties,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -17,6 +18,7 @@ import { hitTaunt, missTaunt } from "@/lib/i18n";
 import { useLocale } from "@/lib/locale";
 import { rangeTruth } from "@/lib/truth";
 import type { Guess, Phase, Step } from "@/lib/game";
+import type { PlayerPublic } from "@/lib/protocol";
 
 export type BoardState = {
   table: (Card | null)[];
@@ -37,6 +39,8 @@ type GameBoardProps = {
   /** Only one connected player — miss continues as "try again". */
   solo: boolean;
   currentPlayerName: string | null;
+  players: PlayerPublic[];
+  winnerId: string | null;
   isMyTurn: boolean;
   onGuess: (guess: Guess) => void;
   onAdvance: () => void;
@@ -80,6 +84,8 @@ export function GameBoard({
   canRestart,
   solo,
   currentPlayerName,
+  players,
+  winnerId,
   isMyTurn,
   onGuess,
   onAdvance,
@@ -272,6 +278,13 @@ export function GameBoard({
 
   const showHit =
     state.phase === "playing" && Boolean(hitText) && !animating;
+  const winner = players.find((p) => p.id === winnerId) ?? null;
+  const pileKids = winner
+    ? [
+        ...players.filter((p) => p.id !== winner.id && p.connected),
+        ...players.filter((p) => p.id !== winner.id && !p.connected),
+      ]
+    : [];
 
   const feltTone = showWin
     ? "is-win"
@@ -419,6 +432,39 @@ export function GameBoard({
                   ? copy.winBy(currentPlayerName)
                   : copy.winCopy}
               </p>
+              {winner ? (
+                <div className="kids-pile" aria-label={copy.kidsPile}>
+                  <p className="kids-pile-title">{copy.kidsPile}</p>
+                  <div className="kids-pile-stack">
+                    <div className="pile-player pile-winner">
+                      {winner.selfie ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={winner.selfie} alt={winner.name} />
+                      ) : (
+                        <span>{winner.name.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                    {pileKids.map((player, index) => (
+                      <div
+                        key={player.id}
+                        className="pile-player pile-kid"
+                        style={
+                          {
+                            "--pile-index": String(index),
+                          } as CSSProperties
+                        }
+                      >
+                        {player.selfie ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={player.selfie} alt={player.name} />
+                        ) : (
+                          <span>{player.name.charAt(0).toUpperCase()}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               {canRestart ? (
                 <button
                   type="button"
