@@ -44,6 +44,20 @@ npm run build
 
 Upload the `out/` folder to Cloudflare Pages.
 
+## CI / CD (GitHub Actions)
+
+Pushes to `main` deploy automatically by path:
+
+| Paths | Workflow | Target |
+| --- | --- | --- |
+| `src/`, `shared/`, Next config, … | `deploy-ui.yml` | Cloudflare Pages |
+| `server/`, `shared/`, … | `deploy-server.yml` | Render |
+
+Repo **variables**: `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_WS_URL`  
+Repo **secrets**: `CLOUDFLARE_API_TOKEN`, `RENDER_API_KEY`, `RENDER_SERVICE_ID`
+
+Create the Cloudflare token at https://dash.cloudflare.com/profile/api-tokens with template **Edit Cloudflare Workers** (includes Pages).
+
 ## Multiplayer rules
 
 - Create a room → invite link `?room=XXXXXX`
