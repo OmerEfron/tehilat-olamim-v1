@@ -21,8 +21,9 @@ export function useRoom(initialRoomId: string | null) {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [room, setRoom] = useState<PublicRoomState | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [name, setNameState] = useState(() => loadName());
-  const [selfie, setSelfieState] = useState<string | null>(() => loadSelfie());
+  // Empty on first paint so SSR/client hydration match; restore after mount.
+  const [name, setNameState] = useState("");
+  const [selfie, setSelfieState] = useState<string | null>(null);
 
   const sendRef = useRef<(msg: Parameters<ReturnType<typeof connectWs>["send"]>[0]) => void>(
     () => {},
@@ -36,6 +37,14 @@ export function useRoom(initialRoomId: string | null) {
   } | null>(null);
   const roomRef = useRef<PublicRoomState | null>(null);
   const playerIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Restore persisted profile after mount so first paint matches SSR.
+    /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydration */
+    setNameState(loadName());
+    setSelfieState(loadSelfie());
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
 
   useEffect(() => {
     roomRef.current = room;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChatPanel } from "@/components/ChatPanel";
 import { GameBoard } from "@/components/GameBoard";
 import { Lobby } from "@/components/Lobby";
@@ -11,14 +11,27 @@ import { roomFromLocation } from "@/lib/session";
 import { useLocale } from "@/lib/locale";
 
 export function RoomApp() {
-  const [initialRoomId] = useState<string | null>(() => roomFromLocation());
+  const [bootstrapped, setBootstrapped] = useState(false);
+  const [initialRoomId, setInitialRoomId] = useState<string | null>(null);
   const { copy } = useLocale();
-  const roomApi = useRoom(initialRoomId);
+  const roomApi = useRoom(bootstrapped ? initialRoomId : null);
+
+  useEffect(() => {
+    // Read ?room= only on the client to avoid SSR/client markup mismatch.
+    /* eslint-disable react-hooks/set-state-in-effect -- client URL bootstrap */
+    setInitialRoomId(roomFromLocation());
+    setBootstrapped(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
 
   const { room, playerId, status, error, name, selfie, setName, setSelfie } = roomApi;
   const inPlay = Boolean(
     room && (room.status === "playing" || room.status === "finished"),
   );
+
+  if (!bootstrapped) {
+    return <div className="lobby" aria-busy="true" />;
+  }
 
   if (!room) {
     return (
