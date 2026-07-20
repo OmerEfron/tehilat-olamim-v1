@@ -87,59 +87,73 @@ export function useRoom(initialRoomId: string | null) {
     return () => conn.close();
   }, [handleMessage]);
 
-  // Flush pending join once socket is open.
+  // Flush pending join / re-associate after reconnect once socket is open.
   useEffect(() => {
     if (status !== "open") return;
+
     const pending = pendingJoin.current;
-    if (!pending) return;
-    pendingJoin.current = null;
+    if (pending) {
+      pendingJoin.current = null;
 
-    if (pending.kind === "create") {
-      sendRef.current({
-        type: "create_room",
-        name: pending.name,
-        selfie: pending.selfie,
-      });
-    } else if (pending.kind === "join" && pending.roomId) {
-      sendRef.current({
-        type: "join_room",
-        roomId: pending.roomId,
-        name: pending.name,
-        selfie: pending.selfie,
-      });
-    } else if (
-      pending.kind === "rejoin" &&
-      pending.roomId &&
-      pending.playerId
-    ) {
+      if (pending.kind === "create") {
+        sendRef.current({
+          type: "create_room",
+          name: pending.name,
+          selfie: pending.selfie,
+        });
+      } else if (pending.kind === "join" && pending.roomId) {
+        sendRef.current({
+          type: "join_room",
+          roomId: pending.roomId,
+          name: pending.name,
+          selfie: pending.selfie,
+        });
+      } else if (
+        pending.kind === "rejoin" &&
+        pending.roomId &&
+        pending.playerId
+      ) {
+        sendRef.current({
+          type: "rejoin",
+          roomId: pending.roomId,
+          playerId: pending.playerId,
+          name: pending.name,
+          selfie: pending.selfie,
+        });
+      }
+      return;
+    }
+
+    // Soft reconnect: UI still has room state, but the new socket is anonymous
+    // until we rejoin — otherwise guesses fail with "Not in a room."
+    const liveRoomId = roomRef.current?.roomId;
+    const livePlayerId = playerIdRef.current;
+    if (liveRoomId && livePlayerId) {
       sendRef.current({
         type: "rejoin",
-        roomId: pending.roomId,
-        playerId: pending.playerId,
-        name: pending.name,
-        selfie: pending.selfie,
+        roomId: liveRoomId,
+        playerId: livePlayerId,
+        name: loadName() || "Player",
+        selfie: loadSelfie(),
       });
+      return;
     }
-  }, [status]);
 
-  // Auto-rejoin from invite / refresh when we have a stored player id.
-  useEffect(() => {
-    if (status !== "open" || room || !initialRoomId) return;
-    const storedName = loadName();
-    if (!storedName) return;
-    const storedSelfie = loadSelfie();
-
-    const storedPlayer = loadPlayerId(initialRoomId);
-    if (storedPlayer) {
-      sendRef.current({
-        type: "rejoin",
-        roomId: initialRoomId,
-        playerId: storedPlayer,
-        name: storedName,
-        selfie: storedSelfie,
-      });
+    // Cold load / refresh with ?room= and a stored player id.
+    if (!roomRef.current && initialRoomId) {
+      const storedName = loadName();
+      const storedPlayer = loadPlayerId(initialRoomId);
+      if (storedName && storedPlayer) {
+        sendRef.current({
+          type: "rejoin",
+          roomId: initialRoomId,
+          playerId: storedPlayer,
+          name: storedName,
+          selfie: loadSelfie(),
+        });
+      }
     }
-  }, [status, room, initialRoomId]);
+  }, [status, initialRoomId]);
 
   const setName = useCallback((value: string) => {
     setNameState(value);
